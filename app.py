@@ -764,31 +764,10 @@ def apply_cleaning(df: pd.DataFrame, suggestions: list) -> tuple:
                 log.append(f"Dropped '{col}' (>50% null). [Completeness]")
 
             elif t == "to_datetime" and col in df.columns:
-                # ── ROOT CAUSE OF NULL-INCREASE BUG ──────────────────────────
-                # pd.to_datetime(col, errors='coerce') with no format= argument
-                # uses a single internal parser. When a column has MIXED formats
-                # (e.g. '2024-12-29' ISO alongside '17/04/2022' EU alongside
-                # '10-22-2022' US), any value not matching the first format
-                # detected is silently coerced to NaT.
-                # Result: 8,200 → 8,000 rows with nulls jumping from 4,081 → 12,267.
-                #
-                # ── FIX ──────────────────────────────────────────────────────
-                # Iterate through 14 explicit format strings in order of
-                # unambiguity (ISO first, then EU/US distinguished by day>12).
-                # Each pass only processes rows that are still NaT from the
-                # previous pass — so a successfully parsed row is never
-                # re-processed and cannot be overwritten with NaT.
-                # A final pandas dayfirst=True fallback handles anything left.
+
                 import warnings as _warnings
 
                 def _smart_date_parse(series: pd.Series) -> pd.Series:
-                    """
-                    Robust multi-format date parser that creates zero new NaTs
-                    for values that are parseable in any common date format.
-
-                    Tested against: ISO, EU (DD/MM/YYYY), US (MM/DD/YYYY),
-                    short-year, text-month, and ambiguous symmetric dates.
-                    """
                     FORMATS = [
                         "%Y-%m-%d",    # 2024-12-29  ISO — highest priority, unambiguous
                         "%Y/%m/%d",    # 2024/12/29  ISO slash
@@ -885,18 +864,6 @@ def apply_cleaning(df: pd.DataFrame, suggestions: list) -> tuple:
 
 
 def build_eda_charts(df: pd.DataFrame) -> list:
-    """
-    Build EDA charts — maps to Framework 2 (Execution Chain).
-
-    A real analyst chooses a chart to answer a specific question,
-    not to showcase every chart type.
-
-    BUG FIX: All charts now call _layout() which merges GRID separately
-    per chart, avoiding the duplicate-kwarg TypeError.
-
-    Returns:
-        list of dicts: {fig, title, why_this, alternatives, question}
-    """
     charts = []
 
     num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
