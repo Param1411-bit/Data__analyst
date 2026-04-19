@@ -1867,52 +1867,28 @@ elif stage == "06 · Report":
             cc = df_f.select_dtypes(include=["object", "category"]).columns.tolist()
             dc = df_f.select_dtypes(include=["datetime64"]).columns.tolist()
 
-            prompt = ('''
-                        Act as an elite AI Data Analyst reporting to a non-technical Business Stakeholder. 
-                        Your objective is to write a highly professional, comprehensive Data Analysis Report in pure Markdown based on the raw analytical outputs provided below.
-                        
-                        ### 📊 RAW DATA & SYSTEM OUTPUTS:
-                        - Dataset Dimensions: {df_f.shape[0]:,} rows × {df_f.shape[1]} columns
-                        - Column Types: Numeric: {nc} | Categorical: {cc} | Datetime: {dc}
-                        - Missing Data Resolved: {a.get('missing_pct', {})}
-                        - Outliers Identified: {a.get('outliers', {})}
-                        - Cleaning Log: {log}
-                        - Scope Questions Investigated: {qs}
-                        - Key Conclusions: {st.session_state['conclusions'][:1200]}
-                        - Stress-Test Findings: {st.session_state['stress_test'][:600]}
-                        
-                        ### 📝 REPORTING GUIDELINES:
-                        - Tone: Professional, objective, and executive-friendly.
-                        - Style: Plain English. Translate technical Pandas operations into business value (e.g., instead of "dropped NaNs", say "removed incomplete records to ensure accuracy").
-                        - Formatting: Use bold text for key metrics, bullet points for readability, and clean spacing.
-                        
-                        You MUST structure the report using EXACTLY these headings. Follow the brief instructions in the parentheses for each section:
-                        
-                        # Data Analysis Report
-                        
-                        ## 1. Executive Summary
-                        (Provide the "bottom line up front." Summarize the most critical business takeaway and the overall reliability of the data in 2-3 sentences.)
-                        
-                        ## 2. Dataset Overview
-                        (Briefly describe the scale and composition of the data using the provided rows, columns, and data types.)
-                        
-                        ## 3. Data Quality Findings
-                        (Summarize the initial state of the data. Highlight the missing data percentages and outlier metrics in plain English.)
-                        
-                        ## 4. Cleaning Actions Taken
-                        (Translate the 'Cleaning Log' into a business-friendly summary of how the dataset was standardized and made reliable.)
-                        
-                        ## 5. Key Analytical Findings
-                        (Synthesize the 'Key Conclusions' and 'Scope Questions' into 3-4 impactful, data-backed bullet points. Emphasize specific numbers.)
-                        
-                        ## 6. Limitations
-                        (Provide an honest assessment of limitations based on the 'Stress-test findings'. What are the blind spots? What can't this data tell us?)
-                        
-                        ## 7. Recommended Next Steps
-                        (Suggest 2-3 actionable business or technical next steps based on the limitations and findings.)
-                        
-                        ## Appendix: Full Cleaning Log
-                        (Provide a clean, readable bulleted list of the exact technical cleaning steps taken.)''' )
+            prompt = (
+                "Write a professional data analysis report in Markdown.\n\n"
+                f"Dataset: {df_f.shape[0]:,} rows × {df_f.shape[1]} cols\n"
+                f"Numeric cols: {nc}\nCategorical cols: {cc}\nDatetime cols: {dc}\n"
+                f"Cleaning done: {log}\nScope questions: {qs}\n"
+                f"Key conclusions: {st.session_state['conclusions'][:1200]}\n"
+                f"Stress-test findings: {st.session_state['stress_test'][:600]}\n"
+                f"Outliers: {a.get('outliers',{})}\n"
+                f"Missing resolved: {a.get('missing_pct',{})}\n\n"
+                "Use exactly these section headings:\n"
+                "# Data Analysis Report\n"
+                "## 1. Executive Summary\n"
+                "## 2. Dataset Overview\n"
+                "## 3. Data Quality Findings\n"
+                "## 4. Cleaning Actions Taken\n"
+                "## 5. Key Analytical Findings\n"
+                "## 6. Limitations\n"
+                "## 7. Recommended Next Steps\n"
+                "## Appendix: Full Cleaning Log\n\n"
+                "Write for a business stakeholder — "
+                "plain English, specific numbers, honest limitations."
+            )
             with st.spinner("Drafting report…"):
                 try:
                     ts     = datetime.now().strftime("%Y-%m-%d %H:%M")
