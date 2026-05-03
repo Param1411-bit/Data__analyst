@@ -14,7 +14,7 @@ ollama pull llama3          # or llama3.2, mistral, qwen2.5, etc.
 streamlit run eda_dashboard.py
 ```
 
-Then open **http://localhost:8501** in your browser.
+Then open **localhost** in your browser.
 
 ---
 
